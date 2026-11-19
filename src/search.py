@@ -1,3 +1,16 @@
+import os
+
+from dotenv import load_dotenv
+from langchain_core.output_parsers import StrOutputParser
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_postgres import PGVector
+
+from services.genai import get_embedding, get_genai_chat_model
+
+load_dotenv()
+
+FALLBACK_ANSWER = "Não tenho informações necessárias para responder sua pergunta."
+
 PROMPT_TEMPLATE = """
 CONTEXTO:
 {contexto}
@@ -25,5 +38,30 @@ PERGUNTA DO USUÁRIO:
 RESPONDA A "PERGUNTA DO USUÁRIO"
 """
 
-def search_prompt(question=None):
-    pass
+
+def search_prompt(question: str) -> str:
+    if not question.strip():
+        raise ValueError("A pergunta não pode estar vazia.")
+
+    connection = os.getenv("DATABASE_URL")
+    if not connection:
+        raise ValueError("Defina DATABASE_URL no ambiente.")
+
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise ValueError("Defina GOOGLE_API_KEY no ambiente.")
+
+    vector_store = PGVector(
+        embeddings=get_embedding(),
+        connection=connection,
+        collection_name=os.getenv("PG_VECTOR_COLLECTION_NAME") or "pdf_documents",
+        use_jsonb=True,
+    )
+    documents = vector_store.similarity_search(question, k=10)
+    if not documents:
+        return FALLBACK_ANSWER
+
+    contexto = "\n\n".join(document.page_content for document in documents)
+    prompt = PROMPT_TEMPLATE.format(contexto=contexto, pergunta=question)
+    model = get_genai_chat_model()
+    return (model | StrOutputParser()).invoke(prompt).strip()

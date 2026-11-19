@@ -138,13 +138,13 @@ source venv/bin/activate
 docker compose up -d
 ```
 
-2. Executar ingestão do PDF:
+2. Na primeira utilização ou quando o PDF mudar, ingerir o documento:
 
 ```
 python src/ingest.py
 ```
 
-3. Rodar o chat:
+3. Rodar o chat para fazer buscas. Não é necessário executar a ingestão novamente a cada busca:
 
 ```
 python src/chat.py
