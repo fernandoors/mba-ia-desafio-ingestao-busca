@@ -47,10 +47,6 @@ def search_prompt(question: str) -> str:
     if not connection:
         raise ValueError("Defina DATABASE_URL no ambiente.")
 
-    api_key = os.getenv("GOOGLE_API_KEY")
-    if not api_key:
-        raise ValueError("Defina GOOGLE_API_KEY no ambiente.")
-
     vector_store = PGVector(
         embeddings=get_embedding(),
         connection=connection,
