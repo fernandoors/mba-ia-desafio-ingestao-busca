@@ -2,7 +2,6 @@ import os
 
 from dotenv import load_dotenv
 from langchain_core.output_parsers import StrOutputParser
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_postgres import PGVector
 
 from services.genai import get_embedding, get_genai_chat_model
